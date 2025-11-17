@@ -1,0 +1,22 @@
+# Rust
+/target/
+
+# Lambda deployment artifacts
+*.zip
+bootstrap
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
