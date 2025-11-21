@@ -77,7 +77,10 @@ impl DynamoDbClient {
             .await
             .map_err(|e| ImageResizeError::S3Error(format!("DynamoDB put_item failed: {}", e)))?;
 
+        let region = self.client.config().region().map(|r| r.as_ref()).unwrap_or("unknown");
+
         tracing::info!(
+            region = %region,
             table = %table_name,
             object_key = %metadata.object_key,
             "Saved metadata to DynamoDB"
