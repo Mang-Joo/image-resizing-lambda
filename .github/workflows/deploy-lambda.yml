@@ -1,0 +1,54 @@
+name: Deploy Rust Lambda
+
+on:
+  push:
+    branches: [ "main" ]  # main 브랜치에 push될 때 배포
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      LAMBDA_FUNCTION_NAME: rust-image-resizer   # 실제 Lambda 함수 이름으로 변경
+      BINARY_NAME: image-resizing-lambda                     # 제공 런타임(provided.al2) 기준
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+
+      - name: Add musl target
+        run: rustup target add x86_64-unknown-linux-musl
+
+      - name: Install musl tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: Build release (musl)
+        run: |
+          cargo build --release --target x86_64-unknown-linux-musl
+          mkdir -p dist
+          # 빌드 결과물을 bootstrap 이름으로 복사
+          cp target/x86_64-unknown-linux-musl/release/${{ env.BINARY_NAME }} dist/bootstrap
+          cd dist
+          zip function.zip bootstrap
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update Lambda code
+        run: |
+          aws lambda update-function-code \
+            --function-name "${LAMBDA_FUNCTION_NAME}" \
+            --zip-file fileb://dist/function.zip
