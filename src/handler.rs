@@ -83,6 +83,8 @@ pub async fn handle_s3_event(event: S3Event) -> Result<(), ImageResizeError> {
             };
 
             client.save_metadata(table_name, metadata).await?;
+        } else {
+            tracing::warn!("DynamoDB table not configured, skipping metadata save");
         }
 
         tracing::info!(
