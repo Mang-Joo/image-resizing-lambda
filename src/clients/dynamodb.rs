@@ -10,6 +10,13 @@ pub struct DynamoDbClient {
 impl DynamoDbClient {
     pub async fn new() -> Self {
         let config = aws_config::load_from_env().await;
+        
+        if let Some(region) = config.region() {
+            tracing::info!(region = %region, "Initializing DynamoDB client");
+        } else {
+            tracing::warn!("DynamoDB client initialized without explicit region");
+        }
+
         let client = Client::new(&config);
         Self { client }
     }
