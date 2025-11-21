@@ -5,7 +5,9 @@ pub const MAX_FILE_SIZE_BYTES: u64 = 5 * 1024 * 1024; // 5 MB
 
 #[derive(Debug, Clone)]
 pub struct Config {
+    pub source_bucket: String, // Added for completeness, though usually comes from event
     pub dest_bucket: String,
+    pub source_prefix: String,
     pub resized_prefix: String,
     pub max_width: u32,
     pub max_height: u32,
@@ -19,7 +21,9 @@ impl Config {
             .map_err(|_| ImageResizeError::ConfigError("DEST_BUCKET not set".into()))?;
 
         Ok(Config {
+            source_bucket: env::var("SOURCE_BUCKET").unwrap_or_default(),
             dest_bucket,
+            source_prefix: env::var("SOURCE_PREFIX").unwrap_or_else(|_| "original/".into()),
             resized_prefix: env::var("RESIZED_PREFIX").unwrap_or_else(|_| "resized/".into()),
             max_width: env::var("MAX_WIDTH")
                 .ok()

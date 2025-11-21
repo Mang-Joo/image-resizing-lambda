@@ -9,9 +9,9 @@ lambda_runtime = "1.0.1"
 aws_lambda_events = { version = "1.0.1", default-features = false, features = ["s3"] }
 
 # AWS SDK (latest as of 2025-11-17)
-aws-config = { version = "1.8.10", features = ["behavior-version-latest"] }
-aws-sdk-s3 = "1.112.0"
-aws-sdk-dynamodb = "1.98.0"
+aws-config = { version = "1.8.11", features = ["behavior-version-latest"] }
+aws-sdk-s3 = "1.115.0"
+aws-sdk-dynamodb = "1.100.0"
 
 # Image processing (latest: 0.25.9)
 image = { version = "0.25.9", default-features = false, features = ["jpeg", "png"] }
