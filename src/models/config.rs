@@ -5,6 +5,7 @@ pub const MAX_FILE_SIZE_BYTES: u64 = 5 * 1024 * 1024; // 5 MB
 
 #[derive(Debug, Clone)]
 pub struct Config {
+    #[allow(dead_code)]
     pub source_bucket: String, // Added for completeness, though usually comes from event
     pub dest_bucket: String,
     pub source_prefix: String,
