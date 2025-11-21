@@ -24,11 +24,15 @@ pub async fn handle_s3_event(event: S3Event) -> Result<(), ImageResizeError> {
             .bucket
             .name
             .ok_or_else(|| ImageResizeError::S3Error("Missing bucket name".into()))?;
-        let key = record
+        let raw_key = record
             .s3
             .object
             .key
             .ok_or_else(|| ImageResizeError::S3Error("Missing object key".into()))?;
+
+        let key = urlencoding::decode(&raw_key)
+            .map_err(|e| ImageResizeError::S3Error(format!("Failed to decode key: {}", e)))?
+            .into_owned();
 
         tracing::info!(
             bucket = %bucket,
