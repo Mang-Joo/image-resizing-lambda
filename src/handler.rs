@@ -24,11 +24,15 @@ pub async fn handle_s3_event(event: S3Event) -> Result<(), ImageResizeError> {
             .bucket
             .name
             .ok_or_else(|| ImageResizeError::S3Error("Missing bucket name".into()))?;
-        let key = record
+        let raw_key = record
             .s3
             .object
             .key
             .ok_or_else(|| ImageResizeError::S3Error("Missing object key".into()))?;
+
+        let key = urlencoding::decode(&raw_key)
+            .map_err(|e| ImageResizeError::S3Error(format!("Failed to decode key: {}", e)))?
+            .into_owned();
 
         tracing::info!(
             bucket = %bucket,
@@ -44,14 +48,17 @@ pub async fn handle_s3_event(event: S3Event) -> Result<(), ImageResizeError> {
         let result = image_processor.process_image(image_bytes, original_size)?;
 
         // Generate destination key
-        let dest_key = if result.was_resized {
-            format!(
-                "{}{}x{}/{}",
-                config.resized_prefix, result.width, result.height, key
-            )
+        // Logic: Strip 'source_prefix' (e.g. "original/") from key, prepend 'resized_prefix' (e.g. "resized/")
+        // Example: "original/post-1/img.jpg" -> "post-1/img.jpg" -> "resized/post-1/img.jpg"
+        let relative_key = if key.starts_with(&config.source_prefix) {
+            key.strip_prefix(&config.source_prefix).unwrap_or(&key)
         } else {
-            format!("{}{}", config.resized_prefix, key)
+            &key
         };
+        // Remove leading slashes to prevent "//"
+        let clean_key = relative_key.trim_start_matches('/');
+
+        let dest_key = format!("{}{}", config.resized_prefix, clean_key);
 
         let final_size = result.data.len() as u64;
 
