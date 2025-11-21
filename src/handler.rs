@@ -53,7 +53,7 @@ pub async fn handle_s3_event(event: S3Event) -> Result<(), ImageResizeError> {
         };
         // Remove leading slashes to prevent "//"
         let clean_key = relative_key.trim_start_matches('/');
-        
+
         let dest_key = format!("{}{}", config.resized_prefix, clean_key);
 
         let final_size = result.data.len() as u64;
